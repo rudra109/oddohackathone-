@@ -14,7 +14,7 @@ interface LoginViewProps {
 }
 
 export default function LoginView({ onLoginSuccess }: LoginViewProps) {
-  const [email, setEmail] = useState('alex.chen@vendorbridge.com');
+  const [email, setEmail] = useState('officer@vendorbridge.com');
   const [password, setPassword] = useState('password123');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
@@ -23,44 +23,43 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
 
   const [selectedProfile, setSelectedProfile] = useState<'chen' | 'rivera' | 'marcus'>('chen');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    setAuthError('');
     if (!email || !password) {
       toast.error('Please enter both email and password.');
+      setAuthError('Fields cannot be empty');
       return;
     }
     
     setIsLoading(true);
-    setAuthError('');
 
-    // Simulate enterprise authentication with a brief delay
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
       
-      // Simulate failed login if password is wrong
-      if (password !== 'password123') {
-        toast.error('Invalid credentials. Please try again.');
-        return;
+      if (!res.ok) {
+        throw new Error(data.error || 'Invalid credentials');
       }
-      
-      let userName = 'Alex Chen';
-      let userRole = 'Officer';
+
+      toast.success(`Welcome back, ${data.user.name}!`);
+      // Fallback avatars since backend doesn't store them yet
       let userAvatar = PROFILE_IMAGES.alexChen;
+      if (data.user.role === 'admin') userAvatar = PROFILE_IMAGES.marcusChen;
+      if (data.user.role === 'procurement_officer') userAvatar = PROFILE_IMAGES.alexRivera;
 
-      if (selectedProfile === 'rivera') {
-        userName = 'Alex Rivera';
-        userRole = 'Procurement Lead';
-        userAvatar = PROFILE_IMAGES.alexRivera;
-      } else if (selectedProfile === 'marcus') {
-        userName = 'Marcus Chen';
-        userRole = 'Procurement Officer';
-        userAvatar = PROFILE_IMAGES.marcusChen;
-      }
-
-      toast.success(`Welcome back, ${userName}!`);
-      onLoginSuccess(userName, userRole, userAvatar);
-    }, 1200);
+      onLoginSuccess(data.user.name, data.user.role, userAvatar);
+    } catch (err: any) {
+      setAuthError(err.message);
+      toast.error(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -88,31 +87,31 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                 type="button"
                 onClick={() => {
                   setSelectedProfile('chen');
-                  setEmail('alex.chen@vendorbridge.com');
+                  setEmail('officer@vendorbridge.com');
                 }}
                 className={`text-[10px] font-semibold py-1 px-2 rounded-lg transition-all cursor-pointer truncate ${
                   selectedProfile === 'chen' ? 'bg-white text-black' : 'bg-transparent hover:bg-zinc-800 text-zinc-400'
                 }`}
               >
-                Alex Chen (Off.)
+                Proc. Officer
               </button>
               <button
                 type="button"
                 onClick={() => {
                   setSelectedProfile('rivera');
-                  setEmail('alex.rivera@vendorbridge.com');
+                  setEmail('admin@vendorbridge.com');
                 }}
                 className={`text-[10px] font-semibold py-1 px-2 rounded-lg transition-all cursor-pointer truncate ${
                   selectedProfile === 'rivera' ? 'bg-white text-black' : 'bg-transparent hover:bg-zinc-800 text-zinc-400'
                 }`}
               >
-                Alex Rivera (Lead)
+                Admin (Lead)
               </button>
               <button
                 type="button"
                 onClick={() => {
                   setSelectedProfile('marcus');
-                  setEmail('marcus.chen@vendorbridge.com');
+                  setEmail('vendor@test.com');
                 }}
                 className={`text-[10px] font-semibold py-1 px-2 rounded-lg transition-all cursor-pointer truncate ${
                   selectedProfile === 'marcus' ? 'bg-white text-black' : 'bg-transparent hover:bg-zinc-800 text-zinc-400'
@@ -143,7 +142,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     placeholder="name@company.com"
-                    className="w-full bg-[#0d0d0f]/80 border border-zinc-800 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 rounded-lg py-3 pl-10 pr-4 text-xs text-white placeholder-zinc-700 outline-none transition-all duration-150"
+                    className={`w-full bg-[#0d0d0f]/80 border ${authError ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/50' : 'border-zinc-800 focus:border-zinc-500 focus:ring-zinc-500'} rounded-lg py-3 pl-10 pr-4 text-xs text-white placeholder-zinc-700 outline-none focus:ring-1 transition-all duration-150`}
                   />
                 </div>
               </div>
@@ -177,8 +176,8 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢"
-                    className="w-full bg-[#0d0d0f]/80 border border-zinc-800 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 rounded-lg py-3 pl-10 pr-10 text-xs text-white placeholder-zinc-700 outline-none transition-all duration-150"
+                    placeholder="••••••••"
+                    className={`w-full bg-[#0d0d0f]/80 border ${authError ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/50' : 'border-zinc-800 focus:border-zinc-500 focus:ring-zinc-500'} rounded-lg py-3 pl-10 pr-10 text-xs text-white placeholder-zinc-700 outline-none focus:ring-1 transition-all duration-150`}
                   />
                   <button
                     type="button"
@@ -188,6 +187,11 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+                {authError && (
+                  <p className="text-red-400 text-[10px] ml-1 mt-1 font-medium animate-pulse flex items-center gap-1">
+                    <ShieldAlert className="w-3 h-3" /> {authError}
+                  </p>
+                )}
               </div>
 
               {/* Remember device selection */}

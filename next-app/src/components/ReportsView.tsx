@@ -35,9 +35,47 @@ const itemVariants: any = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } }
 };
 
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+
 export default function ReportsView() {
   const handleExport = () => {
-    toast.success("Exporting report data to CSV...");
+    toast.success("Generating Analytics PDF Report...");
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(22);
+    doc.text("VendorBridge - Analytics Report", 14, 22);
+    
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 32);
+    
+    // Spend Summary
+    doc.setFontSize(16);
+    doc.text("Monthly Spend Summary", 14, 45);
+    
+    autoTable(doc, {
+      startY: 50,
+      head: [['Month', 'Spend Amount']],
+      body: spendData.map(d => [d.name, `$${d.spend.toLocaleString()}`]),
+      theme: 'grid',
+      headStyles: { fillColor: [15, 15, 15] },
+    });
+    
+    // Category Breakdown
+    const finalY = (doc as any).lastAutoTable.finalY || 50;
+    doc.setFontSize(16);
+    doc.text("Spend by Category", 14, finalY + 15);
+    
+    autoTable(doc, {
+      startY: finalY + 20,
+      head: [['Category', 'Amount allocated']],
+      body: categoryData.map(c => [c.name, `$${(c.value * 10).toLocaleString()}`]),
+      theme: 'grid',
+      headStyles: { fillColor: [15, 15, 15] },
+    });
+    
+    doc.save(`Analytics_Report_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   return (
@@ -85,8 +123,8 @@ export default function ReportsView() {
       <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="glass rounded-xl p-6 border border-zinc-800/50 h-80 flex flex-col">
           <p className="text-sm font-semibold text-white mb-6">Monthly Spend Trend</p>
-          <div className="flex-1 w-full min-h-0">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="flex-1 w-full min-h-[200px]">
+            <ResponsiveContainer width="100%" height="100%" minHeight={200}>
               <AreaChart data={spendData}>
                 <defs>
                   <linearGradient id="colorSpend" x1="0" y1="0" x2="0" y2="1">
@@ -109,8 +147,8 @@ export default function ReportsView() {
         
         <div className="glass rounded-xl p-6 border border-zinc-800/50 h-80 flex flex-col">
           <p className="text-sm font-semibold text-white mb-6">Spend by Category</p>
-          <div className="flex-1 w-full min-h-0">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="flex-1 w-full min-h-[200px]">
+            <ResponsiveContainer width="100%" height="100%" minHeight={200}>
               <BarChart data={categoryData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="#27272a" horizontal={false} />
                 <XAxis type="number" stroke="#71717a" fontSize={10} tickLine={false} axisLine={false} />

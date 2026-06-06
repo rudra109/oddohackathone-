@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { Search, Info, Plus, Star, StarHalf, Filter, ChevronLeft, ChevronRight, Eye, Edit, MoreVertical, X, Check, EyeOff, Clipboard } from 'lucide-react';
+import { Search, Info, Plus, Star, StarHalf, Filter, ChevronLeft, ChevronRight, Eye, Edit, MoreVertical, X, Check, EyeOff, Clipboard, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Vendor, ScreenType } from '../types';
@@ -32,6 +32,7 @@ export default function VendorsView({ vendors, setVendors, onOpenVendorQuotes, a
   const [newVendorGst, setNewVendorGst] = useState('29GGGGG0431P1Z5');
   const [newVendorStatus, setNewVendorStatus] = useState<'Active' | 'Inactive'>('Active');
   const [newVendorRating, setNewVendorRating] = useState(4.5);
+  const [editingVendorId, setEditingVendorId] = useState<string | null>(null);
 
   const stats = useMemo(() => {
     const total = 1284;
@@ -57,34 +58,103 @@ export default function VendorsView({ vendors, setVendors, onOpenVendorQuotes, a
     });
   }, [vendors, categoryFilter, searchQuery]);
 
-  const handleCreateVendor = (e: React.FormEvent) => {
+  const handleCreateVendor = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newVendorName.trim()) return;
 
-    const newVendor: Vendor = {
-      id: 'V' + (vendors.length + 1),
-      name: newVendorName,
-      subtitle: newVendorSubtitle || 'Enterprise Integrator',
-      category: newVendorCategory,
-      gstNumber: newVendorGst || '29AAAAA1111A1Z1',
-      status: newVendorStatus,
-      rating: newVendorRating,
-      onTimeRate: 95.5,
-      qualityScore: 94.0,
-      avatarText: newVendorName.substring(0, 1).toUpperCase()
-    };
+    try {
+      const payload = {
+        name: newVendorName,
+        category: newVendorCategory,
+        gstNumber: newVendorGst || '29AAAAA1111A1Z1',
+        contactName: 'Default Contact',
+        contactEmail: 'contact@vendor.com',
+        status: newVendorStatus.toLowerCase(),
+        rating: newVendorRating
+      };
 
-    setVendors((prev) => [newVendor, ...prev]);
-    setAddVendorModalOpen(false);
-    toast.success(`Vendor ${newVendorName} created successfully.`);
+      if (editingVendorId) {
+        const res = await fetch(`/api/vendors/${editingVendorId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('Failed to update vendor');
+        const data = await res.json();
+        
+        setVendors((prev) => prev.map(v => v.id === editingVendorId ? {
+          ...v,
+          name: data.name,
+          category: data.category,
+          gstNumber: data.gstNumber,
+          status: data.status === 'active' ? 'Active' : 'Inactive'
+        } : v));
+        
+        toast.success(`Vendor ${newVendorName} updated successfully.`, { icon: '📝' });
+      } else {
+        const res = await fetch('/api/vendors', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('Failed to create vendor');
+        const data = await res.json();
 
-    // Clear form states
+        const newVendor: Vendor = {
+          id: data._id,
+          name: data.name,
+          subtitle: data.category + ' Partner',
+          category: data.category,
+          gstNumber: data.gstNumber,
+          status: data.status === 'active' ? 'Active' : 'Inactive',
+          rating: data.rating,
+          onTimeRate: 95.5,
+          qualityScore: 94.0,
+          avatarText: data.name.substring(0, 1).toUpperCase()
+        };
+
+        setVendors((prev) => [newVendor, ...prev]);
+        toast.success(`Vendor ${newVendorName} created successfully.`, { icon: '✨' });
+      }
+
+      setAddVendorModalOpen(false);
+      resetForm();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const resetForm = () => {
     setNewVendorName('');
     setNewVendorSubtitle('');
     setNewVendorCategory('Software');
-    setNewVendorGst('29GGGGG0431P1Z5');
+    setNewVendorGst('');
     setNewVendorStatus('Active');
     setNewVendorRating(4.5);
+    setEditingVendorId(null);
+  };
+
+  const handleEditClick = (vendor: Vendor) => {
+    setEditingVendorId(vendor.id);
+    setNewVendorName(vendor.name);
+    setNewVendorSubtitle(vendor.subtitle);
+    setNewVendorCategory(vendor.category as 'Software' | 'Hardware' | 'Logistics');
+    setNewVendorGst(vendor.gstNumber);
+    setNewVendorStatus(vendor.status as 'Active' | 'Inactive');
+    setNewVendorRating(vendor.rating);
+    setAddVendorModalOpen(true);
+  };
+
+  const handleDeleteVendor = async (id: string, name: string) => {
+    if (!window.confirm(`Are you sure you want to delete ${name}?`)) return;
+    try {
+      const res = await fetch(`/api/vendors/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete vendor');
+      setVendors((prev) => prev.filter(v => v.id !== id));
+      toast.success(`Vendor ${name} deleted.`);
+    } catch (err: any) {
+      toast.error(err.message);
+    }
   };
 
   const handleToggleStatus = (id: string) => {
@@ -197,7 +267,7 @@ export default function VendorsView({ vendors, setVendors, onOpenVendorQuotes, a
 
         {/* Add Vendor CTA */}
         <button
-          onClick={() => setAddVendorModalOpen(true)}
+          onClick={() => { resetForm(); setAddVendorModalOpen(true); }}
           className="flex items-center justify-center gap-2 px-5 py-2.5 bg-white hover:bg-zinc-200 rounded-lg font-bold text-xs text-black cursor-pointer select-none shadow transition-all active:scale-[0.98]"
         >
           <Plus className="w-4 h-4" />
@@ -288,13 +358,16 @@ export default function VendorsView({ vendors, setVendors, onOpenVendorQuotes, a
                           <Eye className="w-3.5 h-3.5" />
                         </button>
                         <button 
-                          onClick={() => toast.info(`Edit core profile for ${vendor.name}`)}
+                          onClick={() => handleEditClick(vendor)}
                           className="p-1.5 hover:bg-zinc-800 rounded text-zinc-400 hover:text-white transition-colors cursor-pointer"
                         >
                           <Edit className="w-3.5 h-3.5" />
                         </button>
-                        <button className="p-1.5 hover:bg-zinc-800 rounded text-zinc-400 hover:text-white transition-colors cursor-pointer">
-                          <MoreVertical className="w-3.5 h-3.5" />
+                        <button 
+                          onClick={() => handleDeleteVendor(vendor.id, vendor.name)}
+                          className="p-1.5 hover:bg-red-900/30 rounded text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </td>
@@ -357,8 +430,8 @@ export default function VendorsView({ vendors, setVendors, onOpenVendorQuotes, a
             
             <div className="p-5 border-b border-zinc-800/80 flex justify-between items-center bg-zinc-900/40">
               <div>
-                <h3 className="text-sm font-bold text-white">Add New Strategic Vendor</h3>
-                <p className="text-[10px] text-zinc-455 opacity-65 font-medium mt-0.5">Register strategic procurement partner</p>
+                <h3 className="text-sm font-bold text-white">{editingVendorId ? "Edit Vendor Profile" : "Add New Strategic Vendor"}</h3>
+                <p className="text-[10px] text-zinc-455 opacity-65 font-medium mt-0.5">{editingVendorId ? "Update existing vendor properties" : "Register strategic procurement partner"}</p>
               </div>
               <button 
                 type="button"
@@ -467,15 +540,16 @@ export default function VendorsView({ vendors, setVendors, onOpenVendorQuotes, a
                 <button
                   type="button"
                   className="px-4 py-2 border border-zinc-800 hover:bg-zinc-900 text-zinc-400 hover:text-white transition-colors cursor-pointer text-xs font-medium rounded-lg"
-                  onClick={() => setAddVendorModalOpen(false)}
+                  onClick={() => { resetForm(); setAddVendorModalOpen(false); }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-white hover:bg-zinc-200 text-black cursor-pointer text-xs font-bold rounded-lg transition-colors"
+                  className="px-5 py-2 bg-white hover:bg-zinc-200 text-black cursor-pointer text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5"
                 >
-                  Validate &amp; Save
+                  <Check className="w-3.5 h-3.5" />
+                  {editingVendorId ? "Save Changes" : "Validate & Add"}
                 </button>
               </div>
             </form>

@@ -3,10 +3,42 @@
 import React from 'react';
 import { ShoppingCart, Download, Search, CheckCircle2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export default function PurchaseOrdersView() {
-  const handleDownload = () => {
-    toast.success("Downloading Purchase Order PDF...");
+  const handleDownload = (poNum: string, vendor: string, amount: string, date: string) => {
+    toast.success(`Generating PDF for ${poNum}...`);
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(22);
+    doc.text("VendorBridge - Purchase Order", 14, 22);
+    
+    doc.setFontSize(12);
+    doc.text(`PO Number: ${poNum}`, 14, 32);
+    doc.text(`Vendor: ${vendor}`, 14, 40);
+    doc.text(`Issue Date: ${date}`, 14, 48);
+    doc.text(`Status: ISSUED`, 14, 56);
+    
+    // AutoTable
+    autoTable(doc, {
+      startY: 65,
+      head: [['Item Description', 'Quantity', 'Unit Price', 'Total']],
+      body: [
+        ['Enterprise Software License', '1', amount, amount],
+        ['Service & Maintenance', '1', '$0.00', '$0.00'],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [15, 15, 15] },
+    });
+    
+    // Footer
+    const finalY = (doc as any).lastAutoTable.finalY || 65;
+    doc.setFontSize(14);
+    doc.text(`Grand Total: ${amount}`, 14, finalY + 15);
+    
+    doc.save(`${poNum}.pdf`);
   };
 
   return (
@@ -54,7 +86,7 @@ export default function PurchaseOrdersView() {
                   </td>
                   <td className="py-4 px-3 text-xs text-zinc-400">Nov {10 + i}, 2024</td>
                   <td className="py-4 px-3 text-right">
-                    <button onClick={handleDownload} className="p-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors cursor-pointer">
+                    <button onClick={() => handleDownload(`PO-2024-00${i}`, 'Starlight Systems', '$45,000.00', `Nov ${10 + i}, 2024`)} className="p-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors cursor-pointer">
                       <Download className="w-4 h-4" />
                     </button>
                   </td>

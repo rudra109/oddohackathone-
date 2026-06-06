@@ -1,22 +1,23 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import connectToDatabase from '@/lib/mongoose';
+import { Vendor, Rfq, PurchaseOrder } from '@/models';
 
 export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
     const params = await props.params;
-    const vendor = await prisma.vendor.findUnique({
-      where: { id: params.id },
-      include: {
-        rfqs: true,
-        purchaseOrders: {
-          orderBy: { issuedAt: 'desc' },
-          take: 5
-        }
-      }
-    });
+    await connectToDatabase();
     
+    // Mongoose query replicating the Prisma include
+    const vendor = await Vendor.findById(params.id).lean();
     if (!vendor) return NextResponse.json({ error: 'Vendor not found' }, { status: 404 });
-    return NextResponse.json(vendor);
+    
+    const rfqs = await Rfq.find({ vendors: vendor._id }).lean();
+    const purchaseOrders = await PurchaseOrder.find({ vendorId: vendor._id })
+      .sort({ issuedAt: -1 })
+      .limit(5)
+      .lean();
+      
+    return NextResponse.json({ ...vendor, rfqs, purchaseOrders });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -25,12 +26,22 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
 export async function PATCH(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
     const params = await props.params;
+    await connectToDatabase();
     const body = await request.json();
-    const vendor = await prisma.vendor.update({
-      where: { id: params.id },
-      data: body
-    });
+    
+    const vendor = await Vendor.findByIdAndUpdate(params.id, body, { new: true }).lean();
     return NextResponse.json(vendor);
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 400 });
+  }
+}
+
+export async function DELETE(request: Request, props: { params: Promise<{ id: string }> }) {
+  try {
+    const params = await props.params;
+    await connectToDatabase();
+    await Vendor.findByIdAndDelete(params.id);
+    return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 400 });
   }

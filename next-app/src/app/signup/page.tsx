@@ -13,20 +13,39 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignup = (e: React.FormEvent) => {
+  const [authError, setAuthError] = useState('');
+
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    setAuthError('');
     if (!name || !email || !password) {
       toast.error('Please fill in all fields.');
+      setAuthError('All fields are required');
       return;
     }
     
     setIsLoading(true);
-    // Simulate Signup
-    setTimeout(() => {
-      setIsLoading(false);
+
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, role: 'vendor' })
+      });
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'Signup failed');
+      }
+
       toast.success('Application submitted successfully! You can now log in.');
       router.push('/login');
-    }, 1000);
+    } catch (err: any) {
+      setAuthError(err.message);
+      toast.error(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -59,7 +78,7 @@ export default function SignupPage() {
                     onChange={(e) => setName(e.target.value)}
                     required
                     placeholder="John Doe"
-                    className="w-full bg-[#0d0d0f]/80 border border-zinc-800 focus:border-zinc-500 rounded-lg py-3 pl-10 pr-4 text-xs text-white outline-none"
+                    className={`w-full bg-[#0d0d0f]/80 border ${authError ? 'border-red-500/50 focus:border-red-500' : 'border-zinc-800 focus:border-zinc-500'} rounded-lg py-3 pl-10 pr-4 text-xs text-white outline-none focus:ring-1 transition-all duration-150`}
                   />
                 </div>
               </div>
@@ -75,7 +94,7 @@ export default function SignupPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     placeholder="name@company.com"
-                    className="w-full bg-[#0d0d0f]/80 border border-zinc-800 focus:border-zinc-500 rounded-lg py-3 pl-10 pr-4 text-xs text-white outline-none"
+                    className={`w-full bg-[#0d0d0f]/80 border ${authError ? 'border-red-500/50 focus:border-red-500' : 'border-zinc-800 focus:border-zinc-500'} rounded-lg py-3 pl-10 pr-4 text-xs text-white outline-none focus:ring-1 transition-all duration-150`}
                   />
                 </div>
               </div>
@@ -91,9 +110,14 @@ export default function SignupPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     placeholder="••••••••"
-                    className="w-full bg-[#0d0d0f]/80 border border-zinc-800 focus:border-zinc-500 rounded-lg py-3 pl-10 pr-10 text-xs text-white outline-none"
+                    className={`w-full bg-[#0d0d0f]/80 border ${authError ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/50' : 'border-zinc-800 focus:border-zinc-500 focus:ring-zinc-500'} rounded-lg py-3 pl-10 pr-10 text-xs text-white outline-none focus:ring-1 transition-all duration-150`}
                   />
                 </div>
+                {authError && (
+                  <p className="text-red-400 text-[10px] ml-1 mt-1 font-medium animate-pulse">
+                    {authError}
+                  </p>
+                )}
               </div>
 
               <button

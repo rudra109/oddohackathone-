@@ -44,6 +44,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (savedUser) {
       try { setUser(JSON.parse(savedUser)); } catch (e) {}
     }
+
+    const loadVendors = async () => {
+      try {
+        const res = await fetch('/api/vendors');
+        if (res.ok) {
+          const data = await res.json();
+          // Map Mongoose _id to id and structure
+          const mapped = data.map((v: any) => ({
+            id: v._id,
+            name: v.name,
+            subtitle: v.category + ' Partner', // mock subtitle
+            category: v.category,
+            gstNumber: v.gstNumber,
+            status: v.status === 'active' ? 'Active' : 'Inactive',
+            rating: v.rating,
+            onTimeRate: 95.5,
+            qualityScore: 94.0,
+            avatarText: v.name.substring(0, 1).toUpperCase()
+          }));
+          setVendors(mapped);
+        }
+      } catch (err) {
+        console.error('Failed to load vendors', err);
+      }
+    };
+    
+    loadVendors();
   }, []);
 
   const handleLaunchRFQ = (newRfq: RFQ) => {

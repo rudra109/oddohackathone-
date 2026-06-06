@@ -30,5 +30,11 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "src/routes_backend/**/*",
+    "src/utils_backend/**/*",
+    "src/middleware_backend/**/*",
+    "src/server.ts"
+  ]
 }
