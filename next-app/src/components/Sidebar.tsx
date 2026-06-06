@@ -19,9 +19,11 @@ interface SidebarProps {
     avatar: string;
   };
   onLogout: () => void;
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
 }
 
-export default function Sidebar({ currentScreen, setScreen, user, onLogout }: SidebarProps) {
+export default function Sidebar({ currentScreen, setScreen, user, onLogout, isOpen, setIsOpen }: SidebarProps) {
   const router = useRouter();
   
   const navItems = [
@@ -36,17 +38,30 @@ export default function Sidebar({ currentScreen, setScreen, user, onLogout }: Si
   ] as const;
 
   return (
-    <aside className="w-64 bg-[#09090b] border-r border-zinc-800 h-screen flex flex-col p-4 gap-2 flex-shrink-0 z-40 relative">
-      {/* Brand Header */}
-      <div className="flex items-center gap-3 mb-6 px-2 py-1">
-        <div className="w-8 h-8 bg-white rounded flex items-center justify-center shrink-0">
-          <div className="w-4 h-4 bg-black rotate-45"></div>
+    <>
+      {/* Mobile backdrop */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-40 md:hidden" 
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+      <aside className={`fixed md:relative top-0 left-0 h-screen bg-[#09090b] border-r border-zinc-800 flex flex-col p-4 gap-2 flex-shrink-0 z-50 transition-transform duration-300 w-64 ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+        {/* Brand Header */}
+        <div className="flex items-center justify-between gap-3 mb-6 px-2 py-1">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-white rounded flex items-center justify-center shrink-0">
+              <div className="w-4 h-4 bg-black rotate-45"></div>
+            </div>
+            <div>
+              <h1 className="font-bold text-white tracking-tight leading-none text-sm">VendorBridge</h1>
+              <p className="text-[10px] text-zinc-400 mt-1 uppercase tracking-wider font-semibold font-mono">Procurement ERP</p>
+            </div>
+          </div>
+          <button onClick={() => setIsOpen(false)} className="md:hidden text-zinc-400 hover:text-white">
+             &times;
+          </button>
         </div>
-        <div>
-          <h1 className="font-bold text-white tracking-tight leading-none text-sm">VendorBridge</h1>
-          <p className="text-[10px] text-zinc-400 mt-1 uppercase tracking-wider font-semibold font-mono">Procurement ERP</p>
-        </div>
-      </div>
 
       {/* New Request Button */}
       <Link 
@@ -100,5 +115,6 @@ export default function Sidebar({ currentScreen, setScreen, user, onLogout }: Si
         </button>
       </div>
     </aside>
+    </>
   );
 }

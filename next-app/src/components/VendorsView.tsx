@@ -5,7 +5,9 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { Search, Info, Plus, Star, StarHalf, Filter, ChevronLeft, ChevronRight, Eye, Edit, MoreVertical, X, Check, EyeOff } from 'lucide-react';
+import { Search, Info, Plus, Star, StarHalf, Filter, ChevronLeft, ChevronRight, Eye, Edit, MoreVertical, X, Check, EyeOff, Clipboard } from 'lucide-react';
+import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 import { Vendor, ScreenType } from '../types';
 import { PROFILE_IMAGES } from '../data';
 
@@ -74,6 +76,7 @@ export default function VendorsView({ vendors, setVendors, onOpenVendorQuotes, a
 
     setVendors((prev) => [newVendor, ...prev]);
     setAddVendorModalOpen(false);
+    toast.success(`Vendor ${newVendorName} created successfully.`);
 
     // Clear form states
     setNewVendorName('');
@@ -88,6 +91,7 @@ export default function VendorsView({ vendors, setVendors, onOpenVendorQuotes, a
     setVendors((prev) => 
       prev.map(v => v.id === id ? { ...v, status: v.status === 'Active' ? 'Inactive' : 'Active' } : v)
     );
+    toast.info("Vendor status updated.");
   };
 
   const renderStars = (rating: number) => {
@@ -108,7 +112,13 @@ export default function VendorsView({ vendors, setVendors, onOpenVendorQuotes, a
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 max-w-[1440px] mx-auto w-full flex flex-col gap-6 selection:bg-zinc-805 selection:text-white pb-16 relative bg-zinc-950">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="flex flex-col h-full overflow-hidden"
+    >
+      <div className="flex-1 overflow-y-auto p-6 max-w-[1440px] mx-auto w-full flex flex-col gap-6 selection:bg-zinc-805 selection:text-white pb-16 relative bg-zinc-950">
       
       {/* Metrics Row summaries matching Screen 3 precisely */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -118,7 +128,7 @@ export default function VendorsView({ vendors, setVendors, onOpenVendorQuotes, a
           <p className="text-[10px] font-bold font-mono uppercase tracking-wider text-zinc-500 mb-2">Total Vendors</p>
           <p className="text-2xl font-bold font-mono text-white leading-none">{stats.total.toLocaleString()}</p>
           <div className="flex items-center gap-1.5 text-zinc-400 mt-2 text-xs">
-            <span>Ã¢â€ â€˜ 12% vs last month</span>
+            <span>↑ 12% vs last month</span>
           </div>
         </div>
 
@@ -127,7 +137,7 @@ export default function VendorsView({ vendors, setVendors, onOpenVendorQuotes, a
           <p className="text-[10px] font-bold font-mono uppercase tracking-wider text-zinc-500 mb-2">Active Contracts</p>
           <p className="text-2xl font-bold font-mono text-white leading-none">{stats.activeContracts.toLocaleString()}</p>
           <div className="flex items-center gap-1.5 text-zinc-400 mt-2 text-xs">
-            <span>Ã¢Å“â€œ 67% participation</span>
+            <span>✔ 67% participation</span>
           </div>
         </div>
 
@@ -278,7 +288,7 @@ export default function VendorsView({ vendors, setVendors, onOpenVendorQuotes, a
                           <Eye className="w-3.5 h-3.5" />
                         </button>
                         <button 
-                          onClick={() => alert(`Edit core profile for ${vendor.name}`)}
+                          onClick={() => toast.info(`Edit core profile for ${vendor.name}`)}
                           className="p-1.5 hover:bg-zinc-800 rounded text-zinc-400 hover:text-white transition-colors cursor-pointer"
                         >
                           <Edit className="w-3.5 h-3.5" />
@@ -473,6 +483,7 @@ export default function VendorsView({ vendors, setVendors, onOpenVendorQuotes, a
         </div>
       )}
 
-    </div>
+      </div>
+    </motion.div>
   );
 }

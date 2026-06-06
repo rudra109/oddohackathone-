@@ -11,6 +11,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   const screen = pathname === '/' ? 'dashboard' : pathname.replace('/', '');
   const isAuthPage = pathname === '/login' || pathname === '/signup';
@@ -24,6 +25,11 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       router.push('/login');
     }
   }, [user, isAuthPage, router, isMounted]);
+
+  // Close sidebar on route change
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [pathname]);
 
   if (!isMounted) return null;
 
@@ -44,6 +50,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           localStorage.removeItem('erp_user');
           router.push('/login');
         }}
+        isOpen={isSidebarOpen}
+        setIsOpen={setIsSidebarOpen}
       />
       <div className="flex-grow flex flex-col min-w-0 h-full overflow-hidden">
         <Header 
@@ -59,6 +67,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           searchVal={searchVal}
           onSearchChange={setSearchVal}
           user={user}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
         <div className="flex-1 overflow-hidden bg-[#11131b]">
           {children}

@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import { Download, Edit, Share2, Clipboard, Clock, CheckCircle2, AlertCircle, HelpCircle, History } from 'lucide-react';
 import { Approval } from '../types';
+import { toast } from 'sonner';
 
 interface PendingApprovalsViewProps {
   approvals: Approval[];
@@ -30,10 +31,10 @@ export default function PendingApprovalsView({ approvals, setApprovals, onApprov
       );
       setLoadingAction(null);
       if (status === 'Approved') {
+        toast.success(`Document request ${selectedApprovalId} has been successfully APPROVED. Purchase PO generated with status 'Ready for payment release'.`);
         onApproveSuccess();
-        alert(`Document request ${selectedApprovalId} has been successfully APPROVED. Purchase PO generated with status 'Ready for payment release'.`);
       } else {
-        alert(`Document request ${selectedApprovalId} has been REJECTED. Negotiation workflow flags raised.`);
+        toast.error(`Document request ${selectedApprovalId} has been REJECTED. Negotiation workflow flags raised.`);
       }
     }, 1200);
   };

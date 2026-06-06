@@ -5,9 +5,9 @@
  */
 
 import { useState } from 'react';
-import { ChevronRight, Download, Star, Check, X, Shield, Award, Sparkles, HelpCircle } from 'lucide-react';
+import { ChevronRight, Star, Check, X, Shield, Award, Sparkles, Download } from 'lucide-react';
 import { Quotation, RFQ, ScreenType, RFQStatus } from '../types';
-import { PROFILE_IMAGES } from '../data';
+import { toast } from 'sonner';
 
 interface QuotationComparisonViewProps {
   rfq: RFQ;
@@ -25,7 +25,7 @@ export default function QuotationComparisonView({ rfq, quotations, onAwardRFQ, o
     setTimeout(() => {
       onAwardRFQ(rfq.id, selectedQuoteId);
       setIsAwarding(false);
-      alert('Contract awarded successfully! Purchase order generation initialized.');
+      toast.success('Contract awarded successfully! Purchase order generation initialized.');
     }, 1200);
   };
 
@@ -61,7 +61,7 @@ export default function QuotationComparisonView({ rfq, quotations, onAwardRFQ, o
           <button 
             type="button"
             className="px-4 py-2 border border-zinc-800 hover:bg-zinc-900 rounded-lg text-xs font-semibold text-zinc-350 hover:text-white transition-colors cursor-pointer select-none flex items-center gap-2"
-            onClick={() => alert('Downloading Comparison PDF Report')}
+            onClick={() => toast.info('Downloading Comparison PDF Report...')}
           >
             <Download className="w-3.5 h-3.5 text-zinc-400" />
             <span>Export Comparison PDF</span>

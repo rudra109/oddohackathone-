@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Search, Bell, HelpCircle, Shield, Globe } from 'lucide-react';
+import { Search, Bell, HelpCircle, Shield, Globe, Menu } from 'lucide-react';
 
 interface HeaderProps {
   title: string;
@@ -16,13 +16,17 @@ interface HeaderProps {
     role: string;
     avatar: string;
   };
+  onToggleSidebar: () => void;
 }
 
-export default function Header({ title, searchPlaceholder = "Search vendors, POs, or RFQs...", searchVal, onSearchChange, user }: HeaderProps) {
+export default function Header({ title, searchPlaceholder = "Search vendors, POs, or RFQs...", searchVal, onSearchChange, user, onToggleSidebar }: HeaderProps) {
   return (
-    <header className="bg-[#09090b] border-b border-zinc-800 px-6 py-3 flex justify-between items-center w-full sticky top-0 z-30">
+    <header className="bg-[#09090b] border-b border-zinc-800 px-4 md:px-6 py-3 flex justify-between items-center w-full sticky top-0 z-30">
       {/* Title & Search bar */}
-      <div className="flex items-center gap-6 flex-1 max-w-xl">
+      <div className="flex items-center gap-3 md:gap-6 flex-1 max-w-xl">
+        <button onClick={onToggleSidebar} className="md:hidden p-1.5 hover:bg-zinc-850 rounded-lg text-zinc-400">
+          <Menu className="w-5 h-5" />
+        </button>
         <h1 className="text-sm font-bold text-white hidden sm:block truncate shrink-0">{title}</h1>
         <div className="relative flex-1 group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-zinc-100 transition-colors" />

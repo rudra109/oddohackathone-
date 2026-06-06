@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import { RFQ, RFQStatus, Vendor } from '../types';
 import { Calendar, Layers, ShieldCheck, Mail, Send, CheckCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface MyRFQsViewProps {
   rfqs: RFQ[];
@@ -45,11 +46,11 @@ export default function MyRFQsView({ rfqs, onOpenComparison, onSubmitMockQuote, 
     const price = parseFloat(bidPrice);
     const days = parseInt(deliveryDays);
     if (isNaN(price) || isNaN(days)) {
-      alert("Please provide valid quotation amounts.");
+      toast.error("Please provide valid quotation amounts.");
       return;
     }
     onSubmitMockQuote(rfqId, price, days, warrantyLabel);
-    alert("Quotation registered successfully! The status has been promoted to 'Submitted'.");
+    toast.success("Quotation registered successfully! The status has been promoted to 'Submitted'.");
     setSelectedRfqId(null);
   };
 
