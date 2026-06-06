@@ -10,6 +10,8 @@ import { ScreenType, AppActivity } from '../types';
 import { PROFILE_IMAGES } from '../data';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface DashboardViewProps {
   setScreen: (screen: ScreenType) => void;
@@ -33,6 +35,54 @@ const itemVariants: any = {
 
 export default function DashboardView({ setScreen, activities, onCreateRFQTrigger, onAddVendorTrigger }: DashboardViewProps) {
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
+
+  const handleExportPDF = () => {
+    toast.success('Generating Dashboard PDF Report...');
+    const doc = new jsPDF();
+    
+    doc.setFontSize(22);
+    doc.text("VendorBridge - Executive Dashboard Summary", 14, 22);
+    
+    doc.setFontSize(11);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 32);
+    doc.text("Procurement insight metrics, active contracts, and recent operations queue.", 14, 40);
+    
+    // KPI Data Table
+    autoTable(doc, {
+      startY: 50,
+      head: [['Metric', 'Value', 'Status']],
+      body: [
+        ['Total Spend', '$4.2M', '↑ +12% vs last month'],
+        ['Pending Approvals', '14', 'High Priority / Requires action'],
+        ['Active RFQs', '8', '67% participation'],
+        ['Purchase Orders', '42', 'Active fulfillment'],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [15, 15, 15] },
+    });
+    
+    // Recent Activities Table
+    const finalY = (doc as any).lastAutoTable.finalY || 50;
+    doc.setFontSize(16);
+    doc.text("Recent Activity Log", 14, finalY + 15);
+    
+    const activityRows = activities.map(act => [
+      act.time,
+      act.type,
+      act.title,
+      act.description
+    ]);
+    
+    autoTable(doc, {
+      startY: finalY + 22,
+      head: [['Time', 'Type', 'Activity', 'Details']],
+      body: activityRows,
+      theme: 'grid',
+      headStyles: { fillColor: [15, 15, 15] },
+    });
+    
+    doc.save(`Dashboard_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
 
   const barData = [
     { month: 'JAN', value: '$420K', height: '40%' },
@@ -61,7 +111,10 @@ export default function DashboardView({ setScreen, activities, onCreateRFQTrigge
             <Calendar className="w-3.5 h-3.5 text-zinc-400" />
             <span>Last 30 Days</span>
           </button>
-          <button className="px-3.5 py-2 bg-white hover:bg-zinc-200 rounded-lg text-black font-semibold transition-transform hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-2 text-xs select-none shadow">
+          <button 
+            onClick={handleExportPDF}
+            className="px-3.5 py-2 bg-white hover:bg-zinc-200 rounded-lg text-black font-semibold transition-transform hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-2 text-xs select-none shadow"
+          >
             <Download className="w-3.5 h-3.5" />
             <span>Export PDF</span>
           </button>
@@ -306,7 +359,14 @@ export default function DashboardView({ setScreen, activities, onCreateRFQTrigge
 
               {/* Action 3 Invite Manager */}
               <button
-                onClick={() => toast.success("Invite link copied! Send to team managers.")}
+                onClick={() => {
+                  if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                    navigator.clipboard.writeText("https://vendorbridge.com/invite/manager-signup-token-2026");
+                    toast.success("Invite link copied to clipboard! Send to team managers.");
+                  } else {
+                    toast.info("Invite link: https://vendorbridge.com/invite/manager-signup-token-2026");
+                  }
+                }}
                 className="flex flex-col items-center justify-center text-center gap-3 p-4 bg-zinc-950/40 hover:bg-zinc-900/50 border border-zinc-800 rounded-xl hover:border-zinc-700/80 transition-all group cursor-pointer"
               >
                 <div className="w-10 h-10 rounded-full bg-white/5 border border-white/5  flex items-center justify-center group-hover:scale-105 transition-transform text-white">

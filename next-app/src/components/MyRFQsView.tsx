@@ -216,14 +216,15 @@ export default function MyRFQsView({ rfqs, onOpenComparison, onSubmitMockQuote, 
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold font-mono text-zinc-400 uppercase tracking-wider block">Warranty Period Guarantee</label>
                         <select
-                          className="w-full bg-[#0d0d0f]/80 border border-zinc-800 p-2 text-xs text-white rounded-lg [color-scheme:dark]"
+                          className="w-full bg-[#0d0d0f]/80 border border-zinc-800 p-2 text-xs text-white rounded-lg"
                           value={warrantyLabel}
                           onChange={(e) => setWarrantyLabel(e.target.value)}
+                          style={{ colorScheme: 'dark' }}
                         >
-                          <option>6 Months</option>
-                          <option>12 Months</option>
-                          <option>18 Months</option>
-                          <option>24 Months</option>
+                          <option className="bg-zinc-950 text-white">6 Months</option>
+                          <option className="bg-zinc-950 text-white">12 Months</option>
+                          <option className="bg-zinc-950 text-white">18 Months</option>
+                          <option className="bg-zinc-950 text-white">24 Months</option>
                         </select>
                       </div>
 

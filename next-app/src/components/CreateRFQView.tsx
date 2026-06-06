@@ -207,11 +207,12 @@ export default function CreateRFQView({ onLaunchRFQ, onCancel, vendors }: Create
                   <select 
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
-                    className="w-full bg-[#0d0d0f]/80 border border-zinc-800 rounded-lg p-2.5 text-xs text-white focus:ring-1 focus:ring-zinc-550 focus:border-zinc-550 outline-none [color-scheme:dark]"
+                    className="w-full bg-[#0d0d0f]/80 border border-zinc-800 rounded-lg p-2.5 text-xs text-white focus:ring-1 focus:ring-zinc-550 focus:border-zinc-550 outline-none"
+                    style={{ colorScheme: 'dark' }}
                   >
-                    <option>USD - US Dollar</option>
-                    <option>EUR - Euro</option>
-                    <option>GBP - British Pound</option>
+                    <option className="bg-zinc-950 text-white">USD - US Dollar</option>
+                    <option className="bg-zinc-950 text-white">EUR - Euro</option>
+                    <option className="bg-zinc-950 text-white">GBP - British Pound</option>
                   </select>
                 </div>
               </div>
@@ -271,11 +272,12 @@ export default function CreateRFQView({ onLaunchRFQ, onCancel, vendors }: Create
                         <select 
                           value={item.unit}
                           onChange={(e) => handleLineItemChange(item.id, 'unit', e.target.value)}
-                          className="w-full bg-transparent border-0 outline-none ring-0 cursor-pointer focus:ring-1 focus:ring-zinc-700 px-2 py-1 text-xs text-white rounded [color-scheme:dark]"
+                          className="w-full bg-transparent border-0 outline-none ring-0 cursor-pointer focus:ring-1 focus:ring-zinc-700 px-2 py-1 text-xs text-white rounded"
+                          style={{ colorScheme: 'dark' }}
                         >
-                          <option value="Units">Units</option>
-                          <option value="Hours">Hours</option>
-                          <option value="Liters">Liters</option>
+                          <option value="Units" className="bg-zinc-950 text-white">Units</option>
+                          <option value="Hours" className="bg-zinc-950 text-white">Hours</option>
+                          <option value="Liters" className="bg-zinc-950 text-white">Liters</option>
                         </select>
                       </td>
 

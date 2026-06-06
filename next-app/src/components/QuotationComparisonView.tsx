@@ -8,6 +8,8 @@ import { useState } from 'react';
 import { ChevronRight, Star, Check, X, Shield, Award, Sparkles, Download } from 'lucide-react';
 import { Quotation, RFQ, ScreenType, RFQStatus } from '../types';
 import { toast } from 'sonner';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface QuotationComparisonViewProps {
   rfq: RFQ;
@@ -19,6 +21,38 @@ interface QuotationComparisonViewProps {
 export default function QuotationComparisonView({ rfq, quotations, onAwardRFQ, onBack }: QuotationComparisonViewProps) {
   const [selectedQuoteId, setSelectedQuoteId] = useState<string>('Q2'); // Pre-select Recommended Titan Logistics
   const [isAwarding, setIsAwarding] = useState(false);
+
+  const handleExportPDF = () => {
+    toast.success('Generating Comparison PDF Report...');
+    const doc = new jsPDF();
+    
+    doc.setFontSize(20);
+    doc.text("VendorBridge - Quotation Comparison", 14, 22);
+    
+    doc.setFontSize(11);
+    doc.text(`RFQ Title: ${rfq.title}`, 14, 32);
+    doc.text(`Category: ${rfq.category}`, 14, 40);
+    doc.text(`Deadline: ${rfq.dueDate}`, 14, 48);
+    
+    const tableData = quotations.map(q => [
+      q.vendorName,
+      `$${q.totalQuote.toLocaleString()}`,
+      `$${q.unitPrice.toLocaleString()}`,
+      `${q.deliveryDays} Days`,
+      q.paymentTerms,
+      `${q.rating} Stars`
+    ]);
+
+    autoTable(doc, {
+      startY: 55,
+      head: [['Vendor Name', 'Total Quote', 'Unit Price', 'Delivery', 'Payment Terms', 'Rating']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [15, 15, 15] },
+    });
+    
+    doc.save(`Quotation_Comparison_${rfq.id}.pdf`);
+  };
 
   const handleAwardSelection = () => {
     setIsAwarding(true);
@@ -61,7 +95,7 @@ export default function QuotationComparisonView({ rfq, quotations, onAwardRFQ, o
           <button 
             type="button"
             className="px-4 py-2 border border-zinc-800 hover:bg-zinc-900 rounded-lg text-xs font-semibold text-zinc-350 hover:text-white transition-colors cursor-pointer select-none flex items-center gap-2"
-            onClick={() => toast.info('Downloading Comparison PDF Report...')}
+            onClick={handleExportPDF}
           >
             <Download className="w-3.5 h-3.5 text-zinc-400" />
             <span>Export Comparison PDF</span>

@@ -69,7 +69,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           user={user}
           onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
-        <div className="flex-1 overflow-hidden bg-[#11131b]">
+        <div className="flex-1 overflow-y-auto bg-[#11131b]">
           {children}
         </div>
       </div>

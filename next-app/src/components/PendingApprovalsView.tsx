@@ -8,6 +8,8 @@ import React, { useState } from 'react';
 import { Download, Edit, Share2, Clipboard, Clock, CheckCircle2, AlertCircle, HelpCircle, History } from 'lucide-react';
 import { Approval } from '../types';
 import { toast } from 'sonner';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface PendingApprovalsViewProps {
   approvals: Approval[];
@@ -21,6 +23,53 @@ export default function PendingApprovalsView({ approvals, setApprovals, onApprov
   const [loadingAction, setLoadingAction] = useState<'Approve' | 'Reject' | null>(null);
 
   const activeApproval = approvals.find(app => app.id === selectedApprovalId);
+
+  const handleDownloadApproval = () => {
+    if (!activeApproval) return;
+    toast.success(`Generating PDF for ${activeApproval.id}...`);
+    const doc = new jsPDF();
+    
+    doc.setFontSize(22);
+    doc.text(`VendorBridge - Approval Document`, 14, 22);
+    
+    doc.setFontSize(12);
+    doc.text(`Document ID: ${activeApproval.id}`, 14, 32);
+    doc.text(`Title: ${activeApproval.title}`, 14, 40);
+    doc.text(`Vendor: ${activeApproval.vendorName}`, 14, 48);
+    doc.text(`Amount: $${activeApproval.amount.toLocaleString()}`, 14, 56);
+    doc.text(`Status: ${activeApproval.status}`, 14, 64);
+    
+    const items = activeApproval.lineItems ? activeApproval.lineItems.map(item => [
+      item.name,
+      item.quantity.toString(),
+      item.price,
+      item.total
+    ]) : [];
+
+    autoTable(doc, {
+      startY: 72,
+      head: [['Item Description', 'Quantity', 'Unit Cost', 'Total']],
+      body: items,
+      theme: 'grid',
+      headStyles: { fillColor: [15, 15, 15] },
+    });
+    
+    doc.save(`Approval_${activeApproval.id}.pdf`);
+  };
+
+  const handleEditProperties = () => {
+    toast.info("Opening document properties editor. You can adjust Auditing remarks below.");
+  };
+
+  const handleAuditShare = () => {
+    if (!activeApproval) return;
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(`https://vendorbridge.com/audit/share/${activeApproval.id}`);
+      toast.success("Document audit share link copied to clipboard!");
+    } else {
+      toast.info(`Audit Link: https://vendorbridge.com/audit/share/${activeApproval.id}`);
+    }
+  };
 
   const handleAuditDecision = (status: 'Approved' | 'Rejected') => {
     setLoadingAction(status === 'Approved' ? 'Approve' : 'Reject');
@@ -124,13 +173,25 @@ export default function PendingApprovalsView({ approvals, setApprovals, onApprov
                   </p>
                 </div>
                 <div className="flex gap-1">
-                  <button className="p-2 hover:bg-zinc-800 rounded text-zinc-400 hover:text-white cursor-pointer transition-colors" title="Download Document">
+                  <button 
+                    onClick={handleDownloadApproval}
+                    className="p-2 hover:bg-zinc-800 rounded text-zinc-400 hover:text-white cursor-pointer transition-colors" 
+                    title="Download Document"
+                  >
                     <Download className="w-4 h-4" />
                   </button>
-                  <button className="p-2 hover:bg-zinc-800 rounded text-zinc-400 hover:text-white cursor-pointer transition-colors" title="Edit Properties">
+                  <button 
+                    onClick={handleEditProperties}
+                    className="p-2 hover:bg-zinc-800 rounded text-zinc-400 hover:text-white cursor-pointer transition-colors" 
+                    title="Edit Properties"
+                  >
                     <Edit className="w-4 h-4" />
                   </button>
-                  <button className="p-2 hover:bg-zinc-800 rounded text-zinc-400 hover:text-white cursor-pointer transition-colors" title="Audit Share">
+                  <button 
+                    onClick={handleAuditShare}
+                    className="p-2 hover:bg-zinc-800 rounded text-zinc-400 hover:text-white cursor-pointer transition-colors" 
+                    title="Audit Share"
+                  >
                     <Share2 className="w-4 h-4" />
                   </button>
                 </div>
