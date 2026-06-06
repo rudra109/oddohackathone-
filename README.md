@@ -2,7 +2,9 @@
 
 VendorBridge is an enterprise-grade Procurement ERP and Strategic Sourcing platform designed to streamline proposal lifecycles, automate vendor commercial evaluations, manage purchase order approvals, and deliver real-time spend analytics. 
 
-Integrating a Next.js client interface with a TypeScript Express backend and a Python FastAPI microservice for AI matchmaking and forecasting, VendorBridge provides high-speed automated procurement management with modern aesthetics.
+It is structured into two main components:
+1.  **`next-app`**: A Next.js application that integrates the modern dashboard client, React contexts, Prisma models, and Express backend routing.
+2.  **`ai`**: A Python microservice that executes forecasting algorithms, vendor performance rankings, and intelligent bid matching.
 
 ---
 
@@ -26,8 +28,8 @@ Integrating a Next.js client interface with a TypeScript Express backend and a P
 | Layer | Technologies |
 | :--- | :--- |
 | **Frontend / App Layout** | Next.js (Turbopack), React 19, TailwindCSS, Framer Motion, Recharts, Sonner Toasts, Lucide Icons |
-| **Backend API Gateway** | Node.js, Express, TypeScript, Prisma ORM, PostgreSQL |
-| **AI Microservice** | Python 3.9+, FastAPI, Uvicorn, Pandas, NumPy |
+| **Backend API Gateway** | Node.js, Express, TypeScript, Prisma ORM, PostgreSQL (within `next-app`) |
+| **AI Microservice** | Python 3.9+, FastAPI, Uvicorn, Pandas, NumPy (within `ai`) |
 | **Document Generation** | jsPDF, jspdf-autotable (Client), PDFKit (Server) |
 
 ---
@@ -56,54 +58,38 @@ graph TD
 
 ---
 
-### 1. Next.js Frontend Setup
+### 1. Next.js App Setup (Frontend & Server API)
 1.  Navigate to the `next-app` directory:
     ```bash
     cd next-app
     ```
-2.  Install Node dependencies:
-    ```bash
-    npm install
-    ```
-3.  Launch the development server:
-    ```bash
-    npm run dev
-    ```
-    *The client will be running at [http://localhost:3000](http://localhost:3000).*
-
----
-
-### 2. Express Backend API Setup
-1.  Navigate to the `backend` directory:
-    ```bash
-    cd backend
-    ```
-2.  Install server dependencies:
+2.  Install dependencies:
     ```bash
     npm install
     ```
 3.  Configure environment variables:
-    *   Duplicate `.env.example` to `.env` and set your PostgreSQL connection string:
+    *   Create a `.env` file inside `next-app` and configure your PostgreSQL database URL:
         ```env
         DATABASE_URL="postgresql://username:password@localhost:5432/vendorbridge"
-        PORT=5000
+        PORT=3000
         ```
-4.  Run Prisma migrations:
+4.  Run Prisma database migrations:
     ```bash
     npx prisma migrate dev --name init
     ```
-5.  Seed the database with initial vendor data:
+5.  Seed the database with initial vendor records:
     ```bash
-    npm run db:seed
+    npx tsx prisma/seed.ts
     ```
-6.  Start the Express server:
+6.  Start the Next.js development server:
     ```bash
     npm run dev
     ```
+    *The platform will be running locally at [http://localhost:3000](http://localhost:3000).*
 
 ---
 
-### 3. Python AI Microservice Setup
+### 2. Python AI Microservice Setup
 1.  Navigate to the `ai` directory:
     ```bash
     cd ai
@@ -112,7 +98,7 @@ graph TD
     ```bash
     pip install -r requirements.txt
     ```
-3.  Start the FastAPI application:
+3.  Start the FastAPI application using Uvicorn:
     ```bash
     uvicorn main:app --reload --port 8000
     ```
